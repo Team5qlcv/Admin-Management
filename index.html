@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEALIFY.AI – Admin Dashboard</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f0f4f8;
+            margin: 0;
+            padding: 0;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .card {
+            background: #ffffff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        .filters input, button {
+            padding: 8px;
+            margin-right: 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th {
+            background: #ecf0f1;
+            font-weight: 600;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        .stats {
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+        }
+        .stat-box {
+            flex: 1;
+            background: #eaf6fd;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s ease;
+        }
+        .stat-box:hover {
+            background: #d3eaf8;
+        }
+        select {
+            padding: 6px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<h1>HEALIFY.AI – Admin Revenue & Customer Management</h1>
+
+<div class="card">
+    <h2>Select Report Period</h2>
+    <div class="filters">
+        From: <input type="date" id="startDate">
+        To: <input type="date" id="endDate">
+        <button onclick="generateReport()">View Report</button>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Revenue Summary</h2>
+    <div class="stats">
+        <div class="stat-box">
+            <h3>Total Orders</h3>
+            <p id="totalOrders">0</p>
+        </div>
+        <div class="stat-box">
+            <h3>Successful Orders</h3>
+            <p id="successfulOrders">0</p>
+        </div>
+        <div class="stat-box">
+            <h3>Total Revenue (VND)</h3>
+            <p id="totalRevenue">0</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Product Revenue Report</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Orders</th>
+                <th>Revenue (VND)</th>
+            </tr>
+        </thead>
+        <tbody id="productTable"></tbody>
+    </table>
+    <p><strong>Best-selling product:</strong> <span id="bestProduct">-</span></p>
+</div>
+
+<div class="card">
+    <h2>Customer Management</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Customer Name</th>
+                <th>Current Plan</th>
+                <th>Upgrade Plan</th>
+            </tr>
+        </thead>
+        <tbody id="customerTable"></tbody>
+    </table>
+</div>
+
+<script>
+    const orders = [
+        {date: "2025-10-01", product: "Premium Plan", revenue: 99000, status: "success"},
+        {date: "2025-10-02", product: "AI Health Coaching", revenue: 199000, status: "success"},
+        {date: "2025-10-03", product: "Premium Plus", revenue: 299000, status: "success"},
+        {date: "2025-10-03", product: "Premium Plan", revenue: 99000, status: "failed"},
+        {date: "2025-10-04", product: "Premium Plan", revenue: 99000, status: "success"}
+    ];
+
+    const customers = [
+        {name: "Nguyen Van A", plan: "Free"},
+        {name: "Tran Thi B", plan: "Premium"},
+        {name: "Le Van C", plan: "AI Health Coaching"}
+    ];
+
+    function generateReport() {
+        const start = document.getElementById("startDate").value;
+        const end = document.getElementById("endDate").value;
+        const filteredOrders = orders.filter(o => o.date >= start && o.date <= end);
+
+        const successful = filteredOrders.filter(o => o.status === "success");
+        const totalRevenue = successful.reduce((sum, o) => sum + o.revenue, 0);
+
+        document.getElementById("totalOrders").innerText = filteredOrders.length;
+        document.getElementById("successfulOrders").innerText = successful.length;
+        document.getElementById("totalRevenue").innerText = totalRevenue.toLocaleString();
+
+        const productStats = {};
+        successful.forEach(o => {
+            if (!productStats[o.product]) {
+                productStats[o.product] = {orders: 0, revenue: 0};
+            }
+            productStats[o.product].orders++;
+            productStats[o.product].revenue += o.revenue;
+        });
+
+        const tableBody = document.getElementById("productTable");
+        tableBody.innerHTML = "";
+
+        let bestProduct = "";
+        let maxOrders = 0;
+
+        for (let p in productStats) {
+            if (productStats[p].orders > maxOrders) {
+                maxOrders = productStats[p].orders;
+                bestProduct = p;
+            }
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${p}</td>
+                    <td>${productStats[p].orders}</td>
+                    <td>${productStats[p].revenue.toLocaleString()}</td>
+                </tr>
+            `;
+        }
+
+        document.getElementById("bestProduct").innerText = bestProduct || "-";
+    }
+
+    function loadCustomers() {
+        const table = document.getElementById("customerTable");
+        table.innerHTML = "";
+
+        customers.forEach((c, index) => {
+            table.innerHTML += `
+                <tr>
+                    <td>${c.name}</td>
+                    <td>${c.plan}</td>
+                    <td>
+                        <select onchange="upgradePlan(${index}, this.value)">
+                            <option value="Free" ${c.plan === "Free" ? "selected" : ""}>Free</option>
+                            <option value="Premium" ${c.plan === "Premium" ? "selected" : ""}>Premium</option>
+                            <option value="AI Health Coaching" ${c.plan === "AI Health Coaching" ? "selected" : ""}>AI Health Coaching</option>
+                            <option value="Premium Plus" ${c.plan === "Premium Plus" ? "selected" : ""}>Premium Plus</option>
+                        </select>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function upgradePlan(index, newPlan) {
+        customers[index].plan = newPlan;
+        alert("Plan upgraded successfully!");
+        loadCustomers();
+    }
+
+    loadCustomers();
+</script>
+
+</body>
+</html>
